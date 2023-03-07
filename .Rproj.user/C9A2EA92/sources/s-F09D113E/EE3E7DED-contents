@@ -1,0 +1,139 @@
+# install packages
+# install.packages("NLP")
+# install.packages("tm")
+# install.packages("topicmodels")
+# install.packages("reshape2")
+# install.packages("ggplot2")
+# install.packages("RColorBrewer")
+# install.packages("wordcloud")
+# install.packages("pals")
+# install.packages("SnowballC")
+# install.packages("lda")
+# install.packages("ldatuning")
+# install.packages("kableExtra")
+# install.packages("DT")
+# install.packages("flextable")
+# # install klippy for copy-to-clipboard button in code chunks
+# install.packages("remotes")
+# remotes::install_github("rlesur/klippy")
+
+# set options
+options(stringsAsFactors = F)         # no automatic data transformation
+options("scipen" = 100, "digits" = 4) # suppress math annotation
+# load packages
+library(knitr) 
+library(kableExtra) 
+library(DT)
+library(NLP)
+library(tm)
+library(topicmodels)
+library(reshape2)
+library(ggplot2)
+library(RColorBrewer)
+library(wordcloud)
+library(pals)
+library(SnowballC)
+library(lda)
+library(ldatuning)
+library(flextable)
+# activate klippy for copy-to-clipboard button
+klippy::klippy()
+
+# load data
+textdata <- base::readRDS(url("https://slcladal.github.io/data/sotu_paragraphs.rda", "rb"))
+
+# load stopwords
+english_stopwords <- readLines("https://slcladal.github.io/resources/stopwords_en.txt", encoding = "UTF-8")
+
+# create corpus object
+corpus <- Corpus(DataframeSource(textdata))
+
+# Preprocessing chain
+processedCorpus <- tm_map(corpus, content_transformer(tolower))
+processedCorpus <- tm_map(processedCorpus, removeWords, english_stopwords)
+processedCorpus <- tm_map(processedCorpus, removePunctuation, preserve_intra_word_dashes = TRUE)
+processedCorpus <- tm_map(processedCorpus, removeNumbers)
+processedCorpus <- tm_map(processedCorpus, stemDocument, language = "en")
+processedCorpus <- tm_map(processedCorpus, stripWhitespace)
+
+#Model Calclator
+# compute document term matrix with terms >= minimumFrequency
+minimumFrequency <- 5
+DTM <- DocumentTermMatrix(processedCorpus, control = list(bounds = list(global = c(minimumFrequency, Inf))))
+
+# have a look at the number of documents and terms in the matrix
+dim(DTM)
+
+
+# due to vocabulary pruning, we have empty rows in our DTM
+# LDA does not like this. So we remove those docs from the
+# DTM and the metadata
+sel_idx <- slam::row_sums(DTM) > 0
+DTM <- DTM[sel_idx, ]
+textdata <- textdata[sel_idx, ]
+
+
+# create models with different number of topics
+result <- ldatuning::FindTopicsNumber(
+  DTM,
+  topics = seq(from = 2, to = 20, by = 1),
+  metrics = c("CaoJuan2009",  "Deveaud2014", "Griffiths2004", "Arun2010"),
+  method = "Gibbs",
+  control = list(seed = 77),
+  verbose = TRUE
+)
+#Visualisation du nombre de topics
+FindTopicsNumber_plot(result)
+
+
+# number of topics
+K <- 20
+# set random number generator seed
+set.seed(9161)
+# compute the LDA model, inference via 1000 iterations of Gibbs sampling
+topicModel <- LDA(DTM, K, method="Gibbs", control=list(iter = 500, verbose = 25))
+
+
+# have a look a some of the results (posterior distributions)
+tmResult <- posterior(topicModel)
+# format of the resulting object
+attributes(tmResult)
+
+nTerms(DTM)              # lengthOfVocab
+
+
+# topics are probability distributions over the entire vocabulary
+beta <- tmResult$terms   # get beta from results
+dim(beta)                # K distributions over nTerms(DTM) terms
+
+rowSums(beta)            # rows in beta sum to 1
+
+nDocs(DTM)               # size of collection
+
+# for every document we have a probability distribution of its contained topics
+theta <- tmResult$topics 
+dim(theta)               # nDocs(DTM) distributions over K topics
+
+rowSums(theta)[1:10]     # rows in theta sum to 1
+
+
+terms(topicModel, 10)
+
+exampleTermData <- terms(topicModel, 10)
+exampleTermData[, 1:8]
+
+top5termsPerTopic <- terms(topicModel, 5)
+topicNames <- apply(top5termsPerTopic, 2, paste, collapse=" ")
+
+# visualize topics as word cloud
+topicToViz <- 16 # change for your own topic of interest
+topicToViz <- grep('mexico', topicNames)[1] # Or select a topic by a term contained in its name
+# select to 40 most probable terms from the topic by sorting the term-topic-probability vector in decreasing order
+top60terms <- sort(tmResult$terms[topicToViz,], decreasing=TRUE)[1:60]
+words <- names(top60terms)
+# extract the probabilites of each of the 40 terms
+probabilities <- sort(tmResult$terms[topicToViz,], decreasing=TRUE)[1:60]
+# visualize the terms as wordcloud
+mycolors <- brewer.pal(4, "Dark2")
+wordcloud(words, probabilities, random.order = FALSE, color = mycolors)
+

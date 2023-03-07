@@ -1,0 +1,28 @@
+{
+    "id": "F278F6B0",
+    "path": null,
+    "project_path": null,
+    "type": "object_explorer",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1678188051251.0,
+    "source_on_save": false,
+    "relative_order": 5,
+    "properties": {
+        "id": "38e1d57c5cc44598b2e63c07fb90e3b6",
+        "name": "processedCorpus",
+        "title": "processedCorpus",
+        "language": "R",
+        "source_window_id": "",
+        "Source": "Source"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 25895994213466161,
+    "encoding": "",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1678188051251,
+    "read_only": false,
+    "read_only_alternatives": []
+}

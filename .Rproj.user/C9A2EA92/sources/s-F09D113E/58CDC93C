@@ -1,0 +1,28 @@
+{
+    "id": "58CDC93C",
+    "path": null,
+    "project_path": null,
+    "type": "object_explorer",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1678188828120.0,
+    "source_on_save": false,
+    "relative_order": 4,
+    "properties": {
+        "id": "a108cb326a9c421a9c00f9f2b2afd6b5",
+        "name": "DTM",
+        "title": "DTM",
+        "language": "R",
+        "source_window_id": "",
+        "Source": "Source"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 25895994213466161,
+    "encoding": "",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1678188828120,
+    "read_only": false,
+    "read_only_alternatives": []
+}
